@@ -1,4 +1,4 @@
-local gui = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/z4gs/scripts/master/testtttt.lua"))():AddWindow("FB_LêDakii", {
+local gui = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/z4gs/scripts/master/testtttt.lua"))():AddWindow("Dakii-RoGhoul", {
     main_color = Color3.fromRGB(0,0,0),
     min_size = Vector2.new(373, 340),
     can_resize = false
@@ -10,7 +10,7 @@ local get = setmetatable({}, {
     end
 })
 
-local tab1, tab2, tab3, tab4 = gui:AddTab("Chính"), gui:AddTab("Cài Đặt Farm"), gui:AddTab("Trainer"), gui:AddTab("Khác")
+local tab1, tab2, tab3, tab4 = gui:AddTab("Main"), gui:AddTab("Farm Options"), gui:AddTab("Trainer"), gui:AddTab("Misc")
 local btn, btn2, btn3, key, nmc, trainers, labels
 local findobj, findobjofclass, waitforobj, fire, invoke = get.FindFirstChild, get.FindFirstChildOfClass, get.WaitForChild, Instance.new("RemoteEvent").FireServer, Instance.new("RemoteFunction").InvokeServer
 local player = get.Players.LocalPlayer
@@ -61,16 +61,16 @@ local array = {
     }
 }
 
-tab1:AddLabel("Mục Tiêu")
+tab1:AddLabel("Target")
 
 local drop = tab1:AddDropdown("Select", function(opt)
     array.targ = array.npcs[opt]
 end)
 
-btn = tab1:AddButton("Bắt Đầu", function()
+btn = tab1:AddButton("Start", function()
     if not array.autofarm then
         if key then
-            btn.Text, array.autofarm = "Dừng", true
+            btn.Text, array.autofarm = "Stop", true
             local farmtick = tick()
             while array.autofarm do
                 labels("tfarm", "Time elapsed: "..os.date("!%H:%M:%S", tick() - farmtick))
@@ -80,7 +80,7 @@ btn = tab1:AddButton("Bắt Đầu", function()
             player:Kick("Failed to get the Remote key, please try to execute the script again")
         end
     else
-        btn.Text, array.autofarm, array.died = "Bắt Đầu", false, false
+        btn.Text, array.autofarm, array.died = "Start", false, false
     end
 end)
 
@@ -125,9 +125,9 @@ local function getLabel(la)
     return labels[la].value and labels[la].value or labels[la].label.Text
 end
 
-btn3 = tab1:AddButton("Đặt lại", function() labels() end)
+btn3 = tab1:AddButton("Reset", function() labels() end)
 
-if team == "CCG" then tab2:AddLabel("Bậc Vũ Khí") else tab2:AddLabel("Bậc Vũ Khí") end
+if team == "CCG" then tab2:AddLabel("Quinque Stage") else tab2:AddLabel("Kagune Stage") end
 
 local drop2 = tab2:AddDropdown("[ 1 ]", function(opt)
     array.stage = array.stages[tonumber(opt)]
@@ -135,12 +135,12 @@ end)
 
 array.stage = "One"
 
-tab2:AddSwitch("Auto nhiệm vụ", function(bool) 
-    myData:Set("Auto nhiệm vụ", bool)
+tab2:AddSwitch("Reputation Farm", function(bool) 
+    myData:Set("ReputationFarm", bool)
 end):Set(myData:Get("ReputationFarm"))
 
-tab2:AddSwitch("Auto Rút Tiền", function(bool)
-    myData:Set("Auto Rút Tiền", bool)
+tab2:AddSwitch("Auto Reputation Cashout", function(bool)
+    myData:Set("ReputationCashout", bool)
 end):Set(myData:Get("ReputationCashout"))
 
 for i,v in pairs(array.boss) do
@@ -151,15 +151,16 @@ for i,v in pairs(array.boss) do
     end):Set(myData:Get("Boss")[i])
 end
 
-tab2:AddSlider("Tốc độ bay", function(x)
+tab2:AddSlider("TP Speed", function(x)
     myData:Set("TeleportSpeed", x)
-end, {min = 90, max = 350}):Set(60)
-tab2:AddSlider("Tầm xa với quái", function(x)
-    myData:Set("Tầm xa với quái", x * -1)
+end, {min = 90, max = 250}):Set(45)
+
+tab2:AddSlider("Distance from NPC", function(x)
+    myData:Set("DistanceFromNpc", x * -1)
 end, {min = 0, max = 8}):Set(65)
 
-tab2:AddSlider("Tầm xa với boss", function(x)
-    myData:Set("Tầm xa với boss", x * -1)
+tab2:AddSlider("Distance from Bosses", function(x)
+    myData:Set("DistanceFromBoss", x * -1)
 end, {min = 0, max = 15}):Set(55)
 
 labels.p = {label = tab3:AddLabel("Current trainer: "..player.PlayerFolder.Trainers[team.."Trainer"].Value)}
@@ -173,9 +174,9 @@ player.PlayerFolder.Trainers[team.."Trainer"].Changed:connect(function()
     progress:Set(player.PlayerFolder.Trainers[player.PlayerFolder.Trainers[team.."Trainer"].Value].Progress.Value)
 end)
 
-btn2 = tab3:AddButton("Bắt Đầu", function()
+btn2 = tab3:AddButton("Start", function()
     if not array.trainer then
-        array.trainer, btn2.Text = true, "Dừng"
+        array.trainer, btn2.Text = true, "Stop"
         local connection, time
 
         while array.trainer do
@@ -193,14 +194,14 @@ btn2 = tab3:AddButton("Bắt Đầu", function()
             
             result = invoke(remotes.Trainers.RequestTraining)
 
-            if result == "Đang Train" then
+            if result == "TRAINING" then
                 for i,v in pairs(workspace.TrainingSessions:GetChildren()) do
                     if waitforobj(v, "Player").Value == player then
                         fire(waitforobj(v, "Comm"), "Finished", tkey, false)
                         break
                     end
                 end
-            elseif result == "Hoàn Thành Train" then
+            elseif result == "TRAINING COMPLETE" then
                 labels("time", "Switching to other trainer...")
                 for i,v in pairs(player.PlayerFolder.Trainers:GetDescendants()) do
                     if table.find(trainers, v.Name) and findobj(v, "Progress") and tonumber(v.Progress.Value) < 100 and tonumber(player.PlayerFolder.Trainers[player.PlayerFolder.Trainers[team.."Trainer"].Value].Progress.Value) == 100 then
@@ -215,7 +216,7 @@ btn2 = tab3:AddButton("Bắt Đầu", function()
         end
         labels("time", "")
     else
-        array.trainer, btn2.Text = false, "Bắt Đầu"
+        array.trainer, btn2.Text = false, "Start"
     end
 end)
 
